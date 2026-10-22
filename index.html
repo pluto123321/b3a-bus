@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#071b23">
+  <title>B3A 下一班｜富泰邨 → 深圳灣口岸</title>
+  <style>
+    :root { color-scheme: dark; --bg:#071b23; --card:#102b34; --muted:#9bb3ba; --text:#f3fbfc; --mint:#77f2c3; --line:rgba(221,248,247,.13); --red:#ffb2a9; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; padding:28px 18px; color:var(--text); background:radial-gradient(ellipse at 80% 0%, #16424a 0%, var(--bg) 48%); font:16px/1.5 system-ui,-apple-system,"Segoe UI","Noto Sans TC",sans-serif; display:grid; place-items:center; }
+    main { width:min(100%,560px); }
+    .eyebrow { color:var(--mint); font-size:12px; font-weight:750; letter-spacing:.16em; text-transform:uppercase; }
+    h1 { margin:10px 0 20px; font-size:clamp(25px,6vw,38px); line-height:1.2; letter-spacing:-.04em; }
+    .route { display:inline-flex; align-items:center; gap:9px; padding:7px 11px; border:1px solid var(--line); border-radius:999px; background:rgba(16,43,52,.72); color:#d6e9e9; font-size:13px; font-weight:650; }
+    .route strong { color:var(--mint); font-size:15px; }
+    .card { margin-top:16px; overflow:hidden; border:1px solid var(--line); border-radius:24px; background:linear-gradient(145deg,rgba(21,55,64,.98),rgba(12,34,43,.98)); box-shadow:0 22px 65px rgba(0,0,0,.25); }
+    .card-top { padding:23px 24px 18px; display:flex; justify-content:space-between; align-items:center; gap:12px; border-bottom:1px solid var(--line); }
+    .label { color:#b5cbcf; font-size:14px; }
+    .live { display:inline-flex; align-items:center; gap:7px; color:#b5f8da; font-size:12px; font-weight:700; letter-spacing:.08em; }
+    .dot { width:8px; height:8px; border-radius:50%; background:var(--mint); box-shadow:0 0 12px var(--mint); }
+    .body { padding:26px 24px 22px; }
+    .departures { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,145px),1fr)); gap:11px; }
+    .departure-card { min-width:0; padding:15px 13px 16px; border:1px solid var(--line); border-radius:15px; background:rgba(255,255,255,.025); }
+    .departure-card.is-next { border-color:rgba(119,242,195,.42); background:rgba(119,242,195,.065); }
+    .departure-label { overflow:hidden; color:#b5cbcf; font-size:12px; font-weight:700; text-overflow:ellipsis; white-space:nowrap; }
+    .departure-count { display:flex; align-items:baseline; gap:6px; margin:9px 0 12px; }
+    .departure-minutes { color:var(--mint); font-size:clamp(44px,6vw,68px); font-weight:760; letter-spacing:-.075em; line-height:.95; font-variant-numeric:tabular-nums; }
+    .departure-unit { color:#d2e5e6; font-size:13px; white-space:nowrap; }
+    .departure-arrival { color:var(--muted); font-size:11px; }
+    .departure-arrival time { display:block; margin-top:2px; color:var(--text); font-size:14px; font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap; }
+    .departure-empty { grid-column:1/-1; padding:18px 0; color:var(--muted); font-size:14px; }
+    .divider { height:1px; margin:24px 0 19px; background:var(--line); }
+    .detail { display:flex; justify-content:space-between; gap:16px; color:var(--muted); font-size:13px; }
+    .detail + .detail { margin-top:10px; }
+    .detail strong { color:#e0eeee; font-weight:600; text-align:right; }
+    .status { margin:14px 0 0; min-height:22px; color:#b7cdd0; font-size:13px; }
+    .status.error { color:var(--red); }
+    .status.ok { color:#b5f8da; }
+    .bottom { padding:15px 24px 20px; display:flex; align-items:center; justify-content:space-between; gap:12px; border-top:1px solid var(--line); color:var(--muted); font-size:12px; }
+    .refresh-copy { display:grid; gap:2px; }
+    .refresh-copy strong { color:#d8e8e9; font-size:12px; font-variant-numeric:tabular-nums; }
+    button { border:1px solid rgba(119,242,195,.4); border-radius:999px; padding:8px 13px; color:var(--mint); background:rgba(119,242,195,.08); font:inherit; font-weight:700; cursor:pointer; }
+    button:hover { background:rgba(119,242,195,.16); }
+    button:focus-visible { outline:2px solid var(--mint); outline-offset:3px; }
+    button:disabled { opacity:.55; cursor:wait; }
+    footer { margin:18px 3px 0; color:#829da3; font-size:12px; text-align:center; }
+    .spin { display:inline-block; width:12px; height:12px; margin-right:6px; border:2px solid rgba(255,255,255,.25); border-top-color:var(--mint); border-radius:50%; vertical-align:-2px; animation:spin .7s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    @media (max-width:420px) { body { padding:20px 14px; } .card-top,.body { padding-left:19px; padding-right:19px; } .bottom { padding-left:19px; padding-right:19px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="eyebrow">Citybus · Next Bus</div>
+    <h1>富泰邨 <span aria-hidden="true">→</span> 深圳灣口岸</h1>
+    <div class="route"><strong>B3A</strong><span>往深圳灣口岸</span></div>
+
+    <section class="card" aria-label="B3A 實時到站資訊">
+      <div class="card-top">
+        <div class="label">富泰邨（青山公路）</div>
+        <div class="live"><span class="dot"></span>LIVE</div>
+      </div>
+      <div class="body">
+        <div class="departures" id="departures" aria-label="預計到站班次">
+          <div class="departure-empty">正在讀取班次預報…</div>
+        </div>
+        <div class="divider"></div>
+        <div class="detail"><span>行車方向</span><strong id="destination">往深圳灣口岸</strong></div>
+        <div class="detail"><span>上次更新</span><strong id="updated">—</strong></div>
+        <p class="status" id="status" role="status"><span class="spin"></span>正在讀取城巴官方即時資料…</p>
+      </div>
+      <div class="bottom">
+        <div class="refresh-copy"><span>自動更新倒數</span><strong id="refreshCountdown">即將更新…</strong></div>
+        <button id="refresh" type="button">立即更新</button>
+      </div>
+    </section>
+    <footer>資料來源：DATA.GOV.HK · 城巴開放數據</footer>
+  </main>
+
+  <script>
+    'use strict';
+    const API = 'https://rt.data.gov.hk/v2/transport/citybus';
+    const ROUTE = 'B3A';
+    const STOP = '003261'; // Official route-stop and stop APIs: 富泰邨, 青山公路
+    const DIR = 'O';       // Official route-stop direction "outbound", towards destination
+    const REFRESH_MS = 30_000;
+    const els = {
+      departures: document.getElementById('departures'),
+      updated: document.getElementById('updated'),
+      destination: document.getElementById('destination'),
+      status: document.getElementById('status'),
+      button: document.getElementById('refresh'),
+      refreshCountdown: document.getElementById('refreshCountdown')
+    };
+    let nextEtas = [];
+    let lastUpdated = null;
+    let inFlight = false;
+    let routeVerified = false;
+    let routeVerification = null;
+    let refreshTimer = null;
+    let nextRefreshAt = null;
+
+    function localTime(date) {
+      return new Intl.DateTimeFormat('zh-HK', { hour:'2-digit', minute:'2-digit', second:'2-digit', hourCycle:'h23' }).format(date);
+    }
+    function setStatus(message, kind='') {
+      els.status.className = `status ${kind}`;
+      els.status.textContent = message;
+    }
+    function updateDepartureMinutes() {
+      const cards = els.departures.querySelectorAll('.departure-card');
+      cards.forEach((card, index) => {
+        const left = nextEtas[index].getTime() - Date.now();
+        card.querySelector('.departure-minutes').textContent = String(Math.max(0, Math.ceil(left / 60_000)));
+      });
+    }
+    function renderDepartures() {
+      els.departures.replaceChildren();
+      if (!nextEtas.length) {
+        const empty = document.createElement('div');
+        empty.className = 'departure-empty';
+        empty.textContent = '目前沒有可用的班次預報。';
+        els.departures.append(empty);
+        return;
+      }
+      const labels = ['最近一班', '下一班', '再下一班'];
+      nextEtas.forEach((eta, index) => {
+        const card = document.createElement('article');
+        card.className = `departure-card${index === 0 ? ' is-next' : ''}`;
+        card.dataset.eta = String(eta.getTime());
+        card.setAttribute('aria-label', `${labels[index]}，預計到站 ${localTime(eta)}`);
+
+        const label = document.createElement('div');
+        label.className = 'departure-label';
+        label.textContent = labels[index];
+
+        const count = document.createElement('div');
+        count.className = 'departure-count';
+        const minutes = document.createElement('span');
+        minutes.className = 'departure-minutes';
+        const unit = document.createElement('span');
+        unit.className = 'departure-unit';
+        unit.textContent = '分鐘';
+        count.append(minutes, unit);
+
+        const arrival = document.createElement('div');
+        arrival.className = 'departure-arrival';
+        arrival.append(document.createTextNode('預計到站'));
+        const time = document.createElement('time');
+        time.dateTime = eta.toISOString();
+        time.textContent = localTime(eta);
+        arrival.append(time);
+        card.append(label, count, arrival);
+        els.departures.append(card);
+      });
+      updateDepartureMinutes();
+    }
+    function renderRefreshCountdown() {
+      if (inFlight) {
+        els.refreshCountdown.textContent = '正在更新…';
+        return;
+      }
+      if (!nextRefreshAt) {
+        els.refreshCountdown.textContent = '即將更新…';
+        return;
+      }
+      const seconds = Math.max(0, Math.ceil((nextRefreshAt - Date.now()) / 1_000));
+      els.refreshCountdown.textContent = `${seconds} 秒後更新`;
+    }
+    function scheduleRefresh() {
+      if (refreshTimer) clearTimeout(refreshTimer);
+      nextRefreshAt = Date.now() + REFRESH_MS;
+      refreshTimer = setTimeout(refresh, REFRESH_MS);
+      renderRefreshCountdown();
+    }
+    async function getJson(path) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 12_000);
+      try {
+        const response = await fetch(`${API}/${path}`, { signal:controller.signal, cache:'no-store' });
+        if (!response.ok) throw new Error(`官方資料服務回應 ${response.status}`);
+        return await response.json();
+      } finally { clearTimeout(timeout); }
+    }
+    async function verifyOfficialRoute() {
+      if (routeVerified) return;
+      if (!routeVerification) {
+        routeVerification = (async () => {
+          const [route, routeStops, stop] = await Promise.all([
+            getJson(`route/CTB/${ROUTE}`),
+            getJson(`route-stop/CTB/${ROUTE}/outbound`),
+            getJson(`stop/${STOP}`)
+          ]);
+          const routeData = route.data;
+          const stopData = stop.data;
+          const match = routeStops.data?.find(item => item.stop === STOP && item.dir === DIR);
+          if (routeData?.co !== 'CTB' || routeData?.route !== ROUTE || routeData?.dest_tc !== '深圳灣口岸' || !match || !stopData?.name_tc?.includes('富泰邨')) {
+            throw new Error('官方線路資料與富泰邨站點資料未能核對，暫時無法顯示到站時間。');
+          }
+          els.destination.textContent = `往${routeData.dest_tc}`;
+          routeVerified = true;
+        })();
+      }
+      try { await routeVerification; }
+      finally { routeVerification = null; }
+    }
+    async function refresh() {
+      if (inFlight) return;
+      inFlight = true;
+      if (refreshTimer) clearTimeout(refreshTimer);
+      refreshTimer = null;
+      nextRefreshAt = null;
+      renderRefreshCountdown();
+      els.button.disabled = true;
+      if (!nextEtas.length) setStatus('正在讀取城巴官方即時資料…');
+      try {
+        await verifyOfficialRoute();
+        const result = await getJson(`eta/CTB/${STOP}/${ROUTE}`);
+        const candidates = (result.data || [])
+          .filter(item => item.co === 'CTB' && item.route === ROUTE && item.stop === STOP && item.dir === DIR && item.dest_tc === '深圳灣口岸' && item.eta)
+          .map(item => ({ item, date:new Date(item.eta) }))
+          .filter(entry => Number.isFinite(entry.date.getTime()))
+          .filter(entry => entry.date.getTime() > Date.now() - 30_000)
+          .sort((a,b) => a.date - b.date)
+          .slice(0, 3);
+        lastUpdated = new Date();
+        els.updated.textContent = localTime(lastUpdated);
+        if (!candidates.length) {
+          nextEtas = [];
+          renderDepartures();
+          setStatus('目前官方即時資料沒有提供下一班預報，稍後會自動再查。');
+          return;
+        }
+        nextEtas = candidates.map(entry => entry.date);
+        renderDepartures();
+        setStatus('即時到站資料已更新。', 'ok');
+      } catch (error) {
+        const message = error?.name === 'AbortError' ? '連線逾時，請檢查網絡後重試。' : (error?.message || '暫時無法連接官方資料。');
+        setStatus(nextEtas.length ? `更新失敗：${message} 顯示的是上次成功收到的時間。` : `暫時無法載入：${message}`, 'error');
+      } finally {
+        els.button.disabled = false;
+        inFlight = false;
+        scheduleRefresh();
+      }
+    }
+    els.button.addEventListener('click', refresh);
+    refresh();
+    setInterval(updateDepartureMinutes, 1_000);
+    setInterval(renderRefreshCountdown, 1_000);
+  </script>
+</body>
+</html>
